@@ -1,0 +1,45 @@
+# Nombre del flujo de trabajo que aparecerá en la pestaña "Actions" de GitHub.
+name: Backend CI
+
+# Define los eventos que dispararán este flujo de trabajo.
+on:
+  # Se ejecuta cuando se suben cambios a la rama 'main'.
+  push:
+    branches: ["main"]
+  # También se ejecuta cuando se abre o actualiza una Pull Request hacia 'main'.
+  pull_request:
+    branches: ["main"]
+
+# Agrupa todos los trabajos que se ejecutarán.
+jobs:
+  # Definimos un único trabajo llamado 'build-and-test'.
+  build-and-test:
+    # El tipo de máquina virtual en la que se ejecutará el trabajo. 'ubuntu-latest' es estándar.
+    runs-on: ubuntu-latest
+
+    # La secuencia de pasos que se ejecutarán en el trabajo.
+    steps:
+      # 1. Clona tu repositorio en la máquina virtual.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Configura el entorno de Node.js.
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Usaremos una versión LTS reciente de Node.
+
+      # 3. PASOS FUTUROS (AÚN NO FUNCIONARÁN)
+      # Estos pasos los dejamos como esqueleto. Fallarán si se ejecutan ahora
+      # porque todavía no tenemos un proyecto de Node.js con un 'package.json'.
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./backend # Especificamos que se ejecute en la carpeta del backend.
+
+      - name: Run linter
+        run: npm run lint
+        working-directory: ./backend
+
+      - name: Run unit tests
+        run: npm run test
+        working-directory: ./backend
