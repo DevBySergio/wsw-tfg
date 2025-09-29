@@ -1,0 +1,54 @@
+# Definición de todos los servicios que componen nuestra aplicación.
+services:
+  # Servicio de la Base de Datos PostgreSQL
+  db:
+    image: postgres:15-alpine # Usamos una imagen oficial de Postgres ligera.
+    container_name: wsw_db_dev
+    restart: always # Siempre reiniciar el contenedor si se detiene.
+    environment:
+      # Estas variables son para la configuración interna de Postgres.
+      # ¡IMPORTANTE! Más adelante las cambiaremos por variables de entorno.
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: wsw_db
+    ports:
+      # Mapea el puerto 5432 del contenedor al puerto 5432 de tu máquina.
+      # Así, nuestra aplicación de backend podrá conectarse a la base de datos.
+      - "5432:5432"
+    volumes:
+      # Monta un volumen para que los datos de la base de datos persistan
+      # incluso si eliminamos el contenedor. Esencial para no perder datos.
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - wsw_network # Conecta este servicio a nuestra red privada.
+
+  # Servicio de la Caché/Cola Redis
+  redis:
+    image: redis:7-alpine # Imagen oficial y ligera de Redis.
+    container_name: wsw_redis_dev
+    restart: always
+    ports:
+      # Mapea el puerto de Redis para que podamos conectarnos si es necesario.
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - wsw_network
+
+  # El servicio de Backend (NestJS) se añadirá aquí más adelante.
+  # Dejamos el espacio preparado para cuando creemos su Dockerfile.
+
+  # El servicio de Frontend (React) se añadirá aquí más adelante.
+  # Dejamos el espacio preparado para cuando creemos su Dockerfile.
+
+# Definición de los volúmenes para la persistencia de datos.
+volumes:
+  postgres_data:
+    driver: local # Usa el driver de volúmenes por defecto de Docker.
+  redis_data:
+    driver: local
+
+# Definición de las redes para la comunicación entre servicios.
+networks:
+  wsw_network:
+    driver: bridge # Usa el driver de red por defecto para comunicación interna.
