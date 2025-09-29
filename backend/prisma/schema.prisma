@@ -1,0 +1,82 @@
+// Define el proveedor y la URL de la base de datos.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Define el generador de cliente de Prisma.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =================================
+// MODELOS DE LA BASE DE DATOS
+// =================================
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String
+  balance   Decimal   @default(100000.00)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  holdings     Holding[]
+  transactions Transaction[]
+  auditLogs    AdminAuditLog[]
+}
+
+model Asset {
+  symbol      String    @id @unique
+  name        String
+  description String?
+  enabled     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  holdings     Holding[]
+  transactions Transaction[]
+}
+
+model Holding {
+  id        String   @id @default(cuid())
+  userId    String
+  symbol    String
+  quantity  Decimal
+  avgPrice  Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id])
+  asset Asset  @relation(fields: [symbol], references: [symbol])
+
+  @@unique([userId, symbol])
+}
+
+model Transaction {
+  id        String          @id @default(cuid())
+  userId    String
+  symbol    String
+  type      TransactionType
+  quantity  Decimal
+  price     Decimal
+  createdAt DateTime        @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  asset Asset @relation(fields: [symbol], references: [symbol])
+}
+
+model AdminAuditLog {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String
+  target    String
+  createdAt DateTime @default(now())
+
+  admin User @relation(fields: [adminId], references: [id])
+}
+
+enum TransactionType {
+  BUY
+  SELL
+}
