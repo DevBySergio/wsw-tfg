@@ -1,17 +1,25 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { RegisterDto } from './dto/register.dto';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service'; // <- Ruta absoluta
+import { RegisterDto } from 'src/auth/dto/register.dto'; // <- Ruta absoluta
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from 'src/auth/dto/login.dto'; // <- Ruta absoluta
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
-  // Inyectamos el PrismaService que creamos antes
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async register(registerDto: RegisterDto) {
     const { email, password } = registerDto;
 
-    // 1. Verificar si el usuario ya existe
     const existingUser = await this.prisma.user.findUnique({
       where: { email },
     });
@@ -20,10 +28,8 @@ export class AuthService {
       throw new ConflictException('El email ya está en uso.');
     }
 
-    // 2. Hashear la contraseña (¡nunca guardar contraseñas en texto plano!)
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 es el "cost" o "salt rounds"
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Crear el nuevo usuario en la base de datos
     const user = await this.prisma.user.create({
       data: {
         email,
@@ -31,9 +37,37 @@ export class AuthService {
       },
     });
 
-    // 4. Devolver el usuario creado (sin la contraseña)
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...result } = user;
     return result;
+  }
+
+  async login(loginDto: LoginDto) {
+    const { email, password }_ = loginDto;
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new UnauthorizedException('Credenciales inválidas.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Credenciales inválidas.');
+    }
+
+    const accessToken = await this._generateAccessToken(user);
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: __, ...userResult } = user;
+
+    return {
+      accessToken,
+      user: userResult,
+    };
+  }
+
+  private async _generateAccessToken(user: User): Promise<string> {
+    const payload = { sub: user.id, email: user.email };
+    return this.jwtService.signAsync(payload);
   }
 }
