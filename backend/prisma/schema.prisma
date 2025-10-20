@@ -51,6 +51,7 @@ model Holding {
   asset Asset  @relation(fields: [symbol], references: [symbol])
 
   @@unique([userId, symbol])
+  @@index([userId])
 }
 
 model Transaction {
@@ -64,6 +65,8 @@ model Transaction {
 
   user  User  @relation(fields: [userId], references: [id])
   asset Asset @relation(fields: [symbol], references: [symbol])
+
+  @@index([userId])
 }
 
 model AdminAuditLog {
