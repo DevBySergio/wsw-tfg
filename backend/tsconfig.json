@@ -10,10 +10,12 @@
     "sourceMap": true,
     "outDir": "./dist",
 
+    // --- Asegúrate de que estas líneas estén exactamente así ---
     "baseUrl": "./",
     "paths": {
       "src/*": ["src/*"]
     },
+    // -----------------------------------------------------------
 
     "incremental": true,
     "skipLibCheck": true,

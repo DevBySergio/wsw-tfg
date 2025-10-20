@@ -3,12 +3,12 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service'; // <- Ruta absoluta
-import { RegisterDto } from 'src/auth/dto/register.dto'; // <- Ruta absoluta
+import { PrismaService } from 'src/prisma/prisma.service';
+import { RegisterDto } from 'src/auth/dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from 'src/auth/dto/login.dto'; // <- Ruta absoluta
-import { User } from '@prisma/client';
+import { LoginDto } from 'src/auth/dto/login.dto';
+import { User } from '@prisma/client'; // Asegúrate de importar User de @prisma/client
 
 @Injectable()
 export class AuthService {
@@ -43,7 +43,8 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const { email, password }_ = loginDto;
+    // Corrige la línea eliminando el guion bajo extra
+    const { email, password } = loginDto;
 
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -66,6 +67,7 @@ export class AuthService {
     };
   }
 
+  // Asegúrate de que el tipo de entrada 'User' sea el correcto (de @prisma/client)
   private async _generateAccessToken(user: User): Promise<string> {
     const payload = { sub: user.id, email: user.email };
     return this.jwtService.signAsync(payload);
